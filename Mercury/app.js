@@ -2,7 +2,9 @@ var text = document.getElementById('text');
 text.log = function (s) {
     this.innerHTML += s + "\n";
 }
-text.log('high/low: 1000')
+text.log('high/low: 1000');
+text.log('max/min: 73');
+
 
 text.log("HELLO!");
 
@@ -24,16 +26,19 @@ var output = [1];
 
 //Records:
 
-var net = new NeuralNet();
-net.createLayer(input);
-net.createLayer(3);
-net.createLayer(3);
-net.createLayer(1);
-//text.log(net.forward(true));
-var its = [];
-//text.log(net.train(output));
-for (var i = 0; i < 100; i++) {
-    its.push(net.train(output).iterations);
+var start = function () {
+
+    var net = new NeuralNet();
+    net.createLayer(input);
+    net.createLayer(3);
+    net.createLayer(3);
+    net.createLayer(1);
+    //text.log(net.forward(true));
+    var its = [];
+    //text.log(net.train(output));
+    for (var i = 0; i < 1000; i++) {
+        its.push(net.train(output).iterations);
+    }
+    console.log(its.average());
+    text.log(net.layers[net.layers.length - 1].neurons[0].value);
 }
-console.log(its.average());
-text.log(net.layers[net.layers.length - 1].neurons[0].value);

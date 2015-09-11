@@ -10,12 +10,8 @@ NeuralNet.prototype.clear = function () {
     }
 }
 
-NeuralNet.prototype.configure = function (w, dir) {
-    var weight;
-    if (w == null)
-        var weight = Math.random();
-    else
-        weight = w + (dir ? +1 : -1) * (1 - w) * Math.random();
+NeuralNet.prototype.configure = function (min, max) {
+    var weight = Math.random() * (max - min) + min;
     this.layers.forEach(function (l) {
         l.synapses.forEach(function (s) {
             s.weight = weight;
@@ -41,7 +37,7 @@ NeuralNet.prototype.forward = function () {
 
 NeuralNet.prototype.train = function (expectedOutput) {
     var infMax = 100000;
-    var costThreshold = 0.000001;
+    var costThreshold = 0.00000000000000000000000000000001; //1x10^-32
     var cost = 0;
     var result = {
         bestCost: null,
@@ -52,18 +48,22 @@ NeuralNet.prototype.train = function (expectedOutput) {
         }
     };
     var outputLayer = this.layers[this.layers.length - 1];
-    var conf, dir = true;
+    var conf, min = 0,
+        max = 1;
     do {
         this.clear();
         //        text.log(conf + ' ' + dir);
-        conf = this.configure(conf, dir);
+        conf = this.configure(min, max);
         this.forward();
         cost = 0;
         for (var i = 0; i < outputLayer.neurons.length; i++) {
             var y = outputLayer.neurons[i].value;
             var _y = expectedOutput[i];
             cost += 0.5 * Math.pow(y - _y, 2);
-            dir = y < _y;
+            if (y < _y)
+                min = conf;
+            else if (y > _y)
+                max = conf;
         }
         if (result.bestCost == null || cost < result.bestCost) {
             result.bestCost = cost;
