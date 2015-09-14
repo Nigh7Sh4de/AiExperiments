@@ -11,7 +11,8 @@ NeuralNet.prototype.clear = function () {
 }
 
 NeuralNet.prototype.configure = function (min, max) {
-    var weight = Math.random() * (max - min) + min;
+    var weight = ((max - min) / 2) + min;
+    //    var weight = Math.random() * (max - min) + min;
     this.layers.forEach(function (l) {
         l.synapses.forEach(function (s) {
             s.weight = weight;
@@ -25,12 +26,18 @@ NeuralNet.prototype.forward = function () {
     var s = "Starting forward propogation...\n";
     s += "Using the following configuration:\n";
     s += this.toString(NeuralNet.StringFormat.Weight);
-    this.layers.forEach(function (l) {
+    //        this.layers.forEach(function (l) {
+    for (var i = 1; i < this.layers.length; i++) {
+        var l = this.layers[i];
         l.synapses.forEach(function (s) {
             s.forward();
         });
-        s += self.toString();
-    });
+        l.neurons.forEach(function (n) {
+            n.activate();
+        });
+        //        s += self.toString();
+    } //);
+    s += self.toString();
     s += "Finished.\n";
     return s;
 }
@@ -48,8 +55,9 @@ NeuralNet.prototype.train = function (expectedOutput) {
         }
     };
     var outputLayer = this.layers[this.layers.length - 1];
-    var conf, min = 0,
-        max = 1;
+    var conf = 0,
+        min = -10,
+        max = 10;
     do {
         this.clear();
         //        text.log(conf + ' ' + dir);
@@ -77,22 +85,19 @@ NeuralNet.prototype.train = function (expectedOutput) {
     return result;
 }
 
-//NeuralNet.protoype.train = function (expectedOutput) {
-//    var outputLayer = this.layers[this.layers.length];
-//    var cost = 0;
-//    for (var i = 0; i < outputLayer.neurons.length; i++) {
-//        var y = outputLayer.neurons[i].value;
-//        var _y = expectedOutput[i];
-//        cost += 0.5 * Math.pow(y - _y, 2);
-//    }
-//    return cost;
-//}
-
 NeuralNet.prototype.createLayer = function (values) {
     var prevLayer = null;
     if (this.layers.length > 0)
         prevLayer = this.layers[this.layers.length - 1];
     this.layers.push(new NeuralNet.Layer(values, prevLayer));
+}
+
+NeuralNet.prototype.setInputs = function (values) {
+    if (this.layers[0].neurons.length != values.length)
+        console.error('Incorrect numbber of test cases provided');
+    for (var i = 0; i < values; i++) {
+        this.layers[0].neurons[i].value = values[i];
+    }
 }
 
 NeuralNet.Layer = function (values, prevLayer) {
@@ -119,7 +124,7 @@ NeuralNet.Neuron = function (v) {
     var self = this;
     this.value = v == null ? 0 : v;
     this.activate = function () {
-
+        NeuralNet.ActivationFunction.sigmoid(this);
     }
     this.active = false;
 }
@@ -146,6 +151,16 @@ NeuralNet.StringFormat = {
     }
 }
 NeuralNet.StringFormat.Default = NeuralNet.StringFormat.Visual;
+
+NeuralNet.ActivationFunction = {
+    tanh: function (neuron) {
+        neuron.value = Math.tanh(neuron.value);
+    },
+    sigmoid: function (neuron) {
+        neuron.value = 1.0 / (1.0 + Math.exp(-neuron.value));
+    },
+    none: function (neuron) {}
+}
 
 NeuralNet.prototype.toString = function (format) {
     format = format == null ? NeuralNet.StringFormat.Default : format;
